@@ -28,7 +28,7 @@
 				itemInfo:{
 					ruleName:'',
 					state:'',
-					storeUuids:'',
+					storeUuids:[],
 					rule:{
 						payMoney:'',
 						ratio:''

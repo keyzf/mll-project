@@ -21,6 +21,16 @@
 		data(){
 			return {
 				hasCheck:[],
+				vali:{
+					ruleName:false,
+					state:false,
+					storeUuids:false,
+					rule:false,
+					activityDate:false,
+					type:false,
+					avgMoney:false,
+					owerRatio:false
+				}
 			}
 		},
 		ready(){
@@ -133,10 +143,50 @@
 			},
 			saveItem(){
 				var _ = this;
-				console.log(_.iteminfo)
+				/*为空*/
 				if(_.iteminfo.ruleName == ''){
-
-				}
+					_.vali.ruleName = true;
+				};
+				if(_.iteminfo.state == ''){
+					_.vali.state = true;
+				};
+				if(_.iteminfo.storeUuids.length === 0){
+					_.vali.storeUuids = true;
+				};
+				if(_.iteminfo.rule.payMoney == '' || _.iteminfo.rule.ratio == ''){
+					_.vali.rule = true;
+				};
+				if(_.iteminfo.activityBeginDate == '' || _.iteminfo.activityEndDate == ''){
+					_.vali.activityDate = true;
+				};
+				if(_.iteminfo.avgMoney == ''){
+					_.vali.avgMoney = true;
+				};
+				if(_.iteminfo.owerRatio == ''){
+					_.vali.owerRatio = true;
+				};
+				/*非空*/
+				if(_.iteminfo.ruleName != ''){
+					_.vali.ruleName = false;
+				};
+				if(_.iteminfo.state != ''){
+					_.vali.state = false;
+				};
+				if(_.iteminfo.storeUuids.length > 0){
+					_.vali.storeUuids = false;
+				};
+				if(_.iteminfo.rule.payMoney != '' && _.iteminfo.rule.ratio != ''){
+					_.vali.rule = false;
+				};
+				if(_.iteminfo.activityBeginDate != '' && _.iteminfo.activityEndDate != ''){
+					_.vali.activityDate = false;
+				};
+				if(_.iteminfo.avgMoney != ''){
+					_.vali.avgMoney = false;
+				};
+				if(_.iteminfo.owerRatio != ''){
+					_.vali.owerRatio = false;
+				};
 				// this.editShow();
 			}
 		}
@@ -158,7 +208,7 @@
 						<em class="must-point">*</em>
 						<label>规则名称</label>
 						<input maxlength="32" v-model='iteminfo.ruleName' class="wd470" type="text" name="">
-						<em class="error">请填写规则名称，长度1~32个字</em>
+						<em v-show='vali.ruleName' class="error">请填写规则名称，长度1~32个字</em>
 					</div>
 					<div class="search-group">
 						<em class="must-point">*</em>
@@ -166,7 +216,7 @@
 						<input id='cardStartDate' v-model='iteminfo.activityBeginDate' class="wd100" type="text" name="">
 						<span>至</span>
 						<input id='cardEndDate' v-model='iteminfo.activityEndDate' class="wd100" type="text" name="">
-						<em class="error">请填写有效期</em>
+						<em v-show='vali.activityDate' class="error">请填写有效期</em>
 					</div>
 					<div class="search-group">
 						<em class="must-point top2">*</em>
@@ -174,30 +224,30 @@
 						<a @click='checkStore' class='radius current' href="javascript:;">所有门店</a>
 						<a @click='checkStore' class='radius' href="javascript:;">指定门店</a>
 						<store></store>
-						<em class="error">请选择适用门店</em>
+						<em v-show='vali.storeUuids' class="error">请选择适用门店</em>
 					</div>	
 					<div class="search-group">
 						<em class="must-point">*</em>
 						<label>规则名称</label>
 						<span>订单金额 ≥ </span>
-						<input v-model='iteminfo.rule.payMoney ' class="wd100" type="text" name="">
+						<input v-model='iteminfo.rule.payMoney ' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
 						<span>元，返点比例</span>
-						<input v-model='iteminfo.rule.ratio' class="wd100" type="text" name="">
+						<input v-model='iteminfo.rule.ratio' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
 						<span>%</span>
-						<em class="error">请填写返点比例（订单金额需为正整数，返点比例范围1~100的整数）</em>
+						<em v-show='vali.rule' class="error">请填写返点比例（订单金额需为正整数，返点比例范围1~100的整数）</em>
 					</div>	
 					<div class="search-group flx">
 						<div>
 							<em style="top:13px" class="must-point">*</em>
 							<label>金主所得</label>
-							<input v-model='iteminfo.owerRatio' class="wd100" type="text" name="">
+							<input v-model='iteminfo.owerRatio' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
 							<span>%</span>
-							<em class="error">请输入范围1~100的整数</em>
 						</div>
 						<div>
 							<span>订单拥有者可以获得红包金额的比例，当计算剩余金额不足1元时，则金主获得全部金额</span>
 						</div>
 					</div>	
+					<em v-show='vali.owerRatio' class="error anoth">请输入范围1~100的整数</em>
 					<div class="search-group">
 						<em class="must-point top2">*</em>
 						<label>红包类型</label>
@@ -213,9 +263,9 @@
 					<div class="search-group">
 						<em class="must-point">*</em>
 						<label>每人领取</label>
-						<input v-model='iteminfo.avgMoney' class="wd100" type="text" name="">
+						<input v-model='iteminfo.avgMoney' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
 						<span>请输入1~199的数值</span>
-						<em class="error">请填写正确金额</em>
+						<em v-show='vali.avgMoney' class="error">请填写正确金额</em>
 					</div>
 					<div class="search-group">
 						<label>红包金额</label>
@@ -242,6 +292,8 @@
 <style lang='less' scoped>
 .modal-container {
    width: 670px;
+   height:100%;
+   overflow-y: auto;
    margin: 0px auto;
    padding: 0px 30px 30px 30px;
    background-color: #fff;
@@ -326,6 +378,17 @@
    .search-group:last-of-type{
    		margin-bottom:0
    }
+   .anoth{
+   	display:block;
+		font-size:14px;
+		position:relative;
+		left:65px;
+		font-style:normal;
+		margin-top:5px;
+		line-height:1;
+		color: #f94a05;
+		top:-10px;
+   }
    .search-group{
    	position:relative;
    	display:block;
@@ -372,6 +435,17 @@
    	}
    	.top2{
    		top:2px;
+   	}
+   	.error{
+   		display:block;
+   		font-size:14px;
+   		position:relative;
+   		left:65px;
+   		font-style:normal;
+   		margin-top:5px;
+   		line-height:1;
+   		color: #f94a05;
+   		bottom:-8px;
    	}
    }
 }
