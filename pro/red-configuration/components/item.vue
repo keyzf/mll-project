@@ -70,7 +70,7 @@
 					       firstDay : 1,
 					       showOtherMonths:true,
 					       minDate :0,
-					       maxDate:-1,
+					       maxDate:36000,
 					   });
 					},
 					transformStr:function(day,strDay){
@@ -127,6 +127,7 @@
 				$(e.currentTarget).parent().find('a').removeClass('current');
 				$(e.currentTarget).addClass('current');
 				if(e.currentTarget.innerHTML === '指定门店'){
+					console.log(123123)
 					this.storeShow();
 				}
 			},
@@ -172,6 +173,7 @@
 						<label>适用门店</label>
 						<a @click='checkStore' class='radius current' href="javascript:;">所有门店</a>
 						<a @click='checkStore' class='radius' href="javascript:;">指定门店</a>
+						<store></store>
 						<em class="error">请选择适用门店</em>
 					</div>	
 					<div class="search-group">
