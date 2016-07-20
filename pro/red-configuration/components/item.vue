@@ -199,8 +199,14 @@
 					<div class="search-group">
 						<em class="must-point top2">*</em>
 						<label>红包类型</label>
-						<a @click='checkStore' class='radius current' href="javascript:;">固定金额</a>
-						<a @click='checkStore' class='radius' href="javascript:;">随机金额</a>
+						<slot v-if='iteminfo.type=="random"'>
+							<a @click='checkStore' class='radius' href="javascript:;">固定金额</a>
+							<a @click='checkStore' class='radius current' href="javascript:;">随机金额</a>
+						</slot>
+						<slot v-else>
+							<a @click='checkStore' class='radius current' href="javascript:;">固定金额</a>
+							<a @click='checkStore' class='radius' href="javascript:;">随机金额</a>
+						</slot>
 					</div>
 					<div class="search-group">
 						<em class="must-point">*</em>
