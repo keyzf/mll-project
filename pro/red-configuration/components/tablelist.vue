@@ -1,0 +1,231 @@
+<script>
+	import item from './item.vue';
+	import delitem from './delete.vue';
+	import data from './data.js';
+
+	import {
+		modalShow,
+		editShow,
+		deleteItem
+	} from '../vuex/actions';
+
+	export default{
+		components:{ item,delitem },
+		vuex: {
+			getters: {
+				show: state => state.modalShow,
+				itemShow : state => state.editShow,
+			},
+			actions: {
+				modalShow,
+				editShow,
+				deleteItem
+			}
+		},
+		data (){
+			return {
+				tableInfo:data.ruleList,
+				itemInfo:{
+					ruleName:'',
+					state:'',
+					storeUuids:'',
+					rule:{
+						payMoney:'',
+						ratio:''
+					},
+					activityBeginDate:'',
+					activityEndDate:'',
+					type:'',
+					avgMoney:'',
+					owerRatio:''
+				},
+				/*规则名称类型*/
+				ruleList:{
+					ruleName:'',
+					state:''
+				}
+			}
+		},
+		methods:{
+			searchItem(){
+				var _ = this;
+				console.log(_.ruleList);
+				$.post('show/ruleList',_.ruleList,function(data){
+					_.tableInfo = data
+				})
+			},
+			addItem(){
+				this.itemInfo = {
+					ruleName:'',
+					state:'',
+					storeUuids:'',
+					rule:{
+						payMoney:'',
+						ratio:''
+					},
+					activityBeginDate:'',
+					activityEndDate:'',
+					type:'',
+					avgMoney:'',
+					owerRatio:''
+				};
+				this.editShow()
+			},
+			editItem(uid){
+				$.post
+				this.itemInfo = {
+					ruleName:'11',
+					state:'使用中',
+					storeUuids:'',
+					rule:{
+						payMoney:'200',
+						ratio:'10'
+					},
+					activityBeginDate:new Date,
+					activityEndDate:new Date,
+					type:'random',
+					avgMoney:'2',
+					owerRatio:'20'
+				}
+				this.editShow()
+			}
+		}
+	}
+</script>
+
+<template>
+	<div class="table-form">
+		<div class="search-group">
+			<label>规则名称</label>
+			<input v-model='ruleList.ruleName' type="text">
+		</div>
+		<div class="search-group">
+			<label>状态</label>
+			<select v-model='ruleList.state'>
+				<option selected>全部</option>
+				<option>进行中</option>
+				<option>已过期</option>
+				<option>已停用</option>
+			</select>
+		</div>
+		<div class="search-group ml30">
+			<input class="btn-default" type="button" value="查询" @click='searchItem()'>
+			<input class="btn-default" type="button" value="新增规则" @click='addItem()'>
+		</div>
+		<table class="table-list">
+			<thead>
+				<tr>
+					<th>
+						规则名称
+						<div class="opr-tips">
+                     <span class="tips-icon">?</span>
+                     <div class="opr-tips-content">
+                        <dl class="tips-list">
+                           <dd>一个门店可配置多个红包规则，已发放红包金额最多的规则为准</dd>
+                        </dl>
+                     </div>
+                  </div>
+					</th>
+					<th>有效时间</th>
+					<th>状态</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for='item in tableInfo.data'>
+					<td>{{item.name}}</td>
+					<td>{{item.activityBeginDate}}~{{item.activityEndDate}}</td>
+					<td>{{item.state}}</td>
+					<td>
+						<div class="operate-group">
+							<a href="javascript:;" @click='editItem(item.id)'>编辑</a>
+							<slot v-if='item.state=="已过期"||item.state=="已停用"||item.state=="未开始"'>
+								<a href="javascript:;" @click='deleteItem(item.id,1)'>启用</a>
+							</slot>
+							<slot v-else>
+								<a class="delete" href="javascript:;" @click='deleteItem(item.id,0)'>停用</a>
+							</slot>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<div id="pageNav"></div>
+	</div>
+	<item :iteminfo.sync='itemInfo'></item>
+	<delitem></delitem>
+</template>
+
+<style scoped lang='less'>
+	.table-form{
+		margin-top:20px;
+		.ml30{
+			margin-left:10px;
+		}
+	}
+	.opr-tips{
+	    position: relative;
+	    vertical-align: 15px;
+	    display: inline-block;
+	    font-weight: normal;
+	}
+
+	.opr-tips .tips-icon {
+	    position: absolute;
+	    top: 1px;
+	    display: inline-block;
+	    width: 15px;
+	    height: 15px;
+	    border-radius: 50%;
+	    border: 1px solid #666666;
+	    font-size: 12px;
+	    line-height: 15px;
+	    text-align: center;
+	    cursor: pointer;
+	    z-index: 9;
+	    background:#fff;
+	}
+
+	.tips-icon:hover+.opr-tips-content {
+	    transform: scale(1);
+	}
+
+	.opr-tips .opr-tips-content {
+	    position: absolute;
+	    top: 32px;
+	    left:-20px;
+	    padding: 5px 10px;
+	    width: 200px;
+	    border: 1px solid #ddd;
+	    background: #fff;
+	    box-sizing: border-box;
+	    transform-origin:12% 0 ;
+	    transform: scale(0);
+	    transition: all .3s ease-in-out;
+	    text-align: justify;
+	}
+
+	.opr-tips .opr-tips-content:before {
+	    content: "";
+	    width: 0;
+	    height: 0;
+	    border-width: 15px  10px;
+	    border-style: solid;
+	    border-color: transparent transparent #ddd transparent;
+	    position: absolute;
+	    left: 15px;
+	    top: -30px;
+	}
+
+	.opr-tips .opr-tips-content:after {
+	    content: "";
+	    width: 0;
+	    height: 0;
+	    border-width: 15px  10px;
+	    border-style: solid;
+	    border-color: transparent transparent #fff transparent;
+	    position: absolute;
+	    left: 15px;
+	    top: -28px;
+	}
+</style>
