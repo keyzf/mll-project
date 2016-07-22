@@ -22,7 +22,7 @@
 			return {
 				hasCheck:[],
 				vali:{
-					ruleName:false,
+					name:false,
 					state:false,
 					storeUuids:false,
 					rule:false,
@@ -33,161 +33,119 @@
 				}
 			}
 		},
-		ready(){
-			this.init();
+		watch:{
+			iteminfo:{
+				handler(val, oldVal){
+					var _ = this;
+					/*为空*/
+					if(val.name == ''){
+						_.vali.name = true;
+					};
+					if(val.state == ''){
+						_.vali.state = true;
+					};
+					console.log(val.storeUuids.length === 0 && $('.radius').eq(1).hasClass('current'))
+					if(val.storeUuids.length === 0 && $('.radius').eq(1).hasClass('current')){
+						_.vali.storeUuids = true;
+					};
+
+					$(val.rule).each(function(){
+						if(this.payMoney == '' || this.ratio == '' || this.ratio >100){
+							_.vali.rule = true;
+							return false;
+						}else{
+							_.vali.rule = false;
+						};
+					});
+					if(val.activityBeginDate == '' || val.activityEndDate == ''){
+						_.vali.activityDate = true;
+					};
+					if(val.avgMoney == '' || val.avgMoney>199 ){
+						_.vali.avgMoney = true;
+					};
+					if(val.owerRatio == '' || val.owerRatio>100 ){
+						_.vali.owerRatio = true;
+					};
+					/*非空*/
+					if(val.name != ''){
+						_.vali.name = false;
+					};
+					if(val.state != ''){
+						_.vali.state = false;
+					};
+					if(val.storeUuids.length > 0 || $('.radius').eq(0).hasClass('current')){
+						_.vali.storeUuids = false;
+					};
+
+					if(val.activityBeginDate != '' && val.activityEndDate != ''){
+						_.vali.activityDate = false;
+					};
+					if(val.avgMoney != '' && val.avgMoney<200 ){
+						_.vali.avgMoney = false;
+					};
+					if(val.owerRatio != '' && val.owerRatio<101 ){
+						_.vali.owerRatio = false;
+					};
+				},
+				deep:true
+			}
 		},
 		methods:{
-			init(){
-				var cardStay = {
-					start:$('#cardStartDate'),
-					end:$('#cardEndDate'),
-					today:(new Date()),
-					init:function(){
-					   cardStay.inputVal();
-					   cardStay.today = new Date($("#cardStartDate").val());
-					   cardStay.endFun();
-					   cardStay.startFun();
-					   cardStay.end.datepicker('option', 'minDate', new Date(moment(cardStay.today).add('days', 0)));
-					},
-					startFun:function(){
-					   cardStay.start.datepicker({
-					       dateFormat : 'yy-mm-dd',
-					       dayNamesMin : ['日','一','二','三','四','五','六'],
-					       monthNames : ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-					       altFormat : 'yy-mm-dd',
-					       yearSuffix:'年',
-					       showMonthAfterYear:true,
-					       firstDay : 1,
-					       showOtherMonths:true,
-					       minDate : -36000,
-					       maxDate:-1,
-					       onSelect:function(dateText,inst){
-					           cardStay.end.datepicker('option', 'minDate', new Date(moment(dateText).add('days',0)));
-					           cardStay.end.datepicker('option', 'maxDate', new Date(moment(new Date()).add('days', -1)));
-					       }
-
-					   });
-					},
-					endFun:function(){
-					   cardStay.end.datepicker('refresh');
-					   cardStay.end.datepicker({
-					       dateFormat : 'yy-mm-dd',
-					       dayNamesMin : ['日','一','二','三','四','五','六'],
-					       monthNames : ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-					       altFormat : 'yy-mm-dd',
-					       yearSuffix:'年',
-					       showMonthAfterYear:true,
-					       firstDay : 1,
-					       showOtherMonths:true,
-					       minDate :0,
-					       maxDate:36000,
-					   });
-					},
-					transformStr:function(day,strDay){
-					   switch (day){
-					       case 1:
-					           strDay  = '星期一';
-					           break;
-					       case 2:
-					           strDay  = '星期二';
-					           break;
-					       case 3:
-					           strDay  = '星期三';
-					           break;
-					       case 4:
-					           strDay  = '星期四';
-					           break;
-					       case 5:
-					           strDay  = '星期五';
-					           break;
-					       case 6:
-					           strDay  = '星期六';
-					           break;
-					       case 0:
-					           strDay  = '星期日';
-					           break;
-					   }
-					   return strDay;
-					},
-					compare:function(obj){
-					   var strDay = '今天';
-					   var myDate = new Date(cardStay.today.getFullYear(),cardStay.today.getMonth(),cardStay.today.getDate());
-					   var day = (obj.datepicker('getDate') - myDate)/(24*60*60*1000);
-					   day == 0 ? strDay: day == 1 ?
-					       (strDay = '明天') : day == 2 ?
-					       (strDay = '后天') : (strDay = cardStay.transformStr(obj.datepicker('getDate').getDay(),strDay));
-					   return strDay;
-					},
-					inputVal:function(){
-					   cardStay.inputTimes(cardStay.start,-7);
-					   cardStay.inputTimes(cardStay.end,-1);
-					},
-					inputTimes:function(obj,day){
-					   var m = new Date(moment(cardStay.today).add('days', day));
-					   obj.val(m.getFullYear() + "-" + cardStay.addZero((m.getMonth()+1)) + "-" + cardStay.addZero(m.getDate()));
-					},
-					addZero:function(num){
-					   num < 10 ? num = "0" + num : num ;
-					   return num;
-					}
-				}
-				cardStay.init();
+			getTime(d){
+				return (Date.parse(new Date(d))/1000);
 			},
 			checkStore(e){
+				var _ =this;
 				$(e.currentTarget).parent().find('a').removeClass('current');
 				$(e.currentTarget).addClass('current');
 				if(e.currentTarget.innerHTML === '指定门店'){
-					console.log(123123)
-					this.storeShow();
+					_.storeShow();
 				}
+				if(e.currentTarget.innerHTML === '所有门店'){
+					_.iteminfo.storeUuids='';
+				}
+			},
+			cfix(){
+				var _ = this;
+				var et = event.currentTarget.innerHTML;
+				if(et == '随机金额'){
+					_.iteminfo.type = 'random'
+				}
+				if(et == '固定金额'){
+					_.iteminfo.type = 'fixed'
+				}
+			},
+			cutRule(n){
+				this.iteminfo.rule.splice(n,1)
+			},
+			addRule(){
+				let newR = {
+					payMoney:'',
+					ratio:''
+				}
+				this.iteminfo.rule.push(newR);
 			},
 			saveItem(){
 				var _ = this;
-				/*为空*/
-				if(_.iteminfo.ruleName == ''){
-					_.vali.ruleName = true;
-				};
-				if(_.iteminfo.state == ''){
-					_.vali.state = true;
-				};
-				if(_.iteminfo.storeUuids.length === 0){
-					_.vali.storeUuids = true;
-				};
-				if(_.iteminfo.rule.payMoney == '' || _.iteminfo.rule.ratio == ''){
-					_.vali.rule = true;
-				};
-				if(_.iteminfo.activityBeginDate == '' || _.iteminfo.activityEndDate == ''){
-					_.vali.activityDate = true;
-				};
-				if(_.iteminfo.avgMoney == ''){
-					_.vali.avgMoney = true;
-				};
-				if(_.iteminfo.owerRatio == ''){
-					_.vali.owerRatio = true;
-				};
-				/*非空*/
-				if(_.iteminfo.ruleName != ''){
-					_.vali.ruleName = false;
-				};
-				if(_.iteminfo.state != ''){
-					_.vali.state = false;
-				};
-				if(_.iteminfo.storeUuids.length > 0){
-					_.vali.storeUuids = false;
-				};
-				if(_.iteminfo.rule.payMoney != '' && _.iteminfo.rule.ratio != ''){
-					_.vali.rule = false;
-				};
-				if(_.iteminfo.activityBeginDate != '' && _.iteminfo.activityEndDate != ''){
-					_.vali.activityDate = false;
-				};
-				if(_.iteminfo.avgMoney != ''){
-					_.vali.avgMoney = false;
-				};
-				if(_.iteminfo.owerRatio != ''){
-					_.vali.owerRatio = false;
-				};
-				// this.editShow();
+				var a = false;
+				for(var i in _.vali){
+					if(_.vali[i] == true){
+						a = false
+						return false;
+					}else{
+						a = true
+					}
+				}
+				if(a == true){
+					console.log(_.iteminfo);
+					_.iteminfo.activityBeginDate = Date.parse(_.iteminfo.activityBeginDate);
+					_.iteminfo.activityEndDate = Date.parse(_.iteminfo.activityEndDate);
+					$.post('/show/saveXXX',_.iteminfo,function(data){
+						if(data.success === true){
+							_.editShow();
+						}
+					})
+				}
 			}
 		}
 	}
@@ -207,8 +165,8 @@
 					<div class="search-group">
 						<em class="must-point">*</em>
 						<label>规则名称</label>
-						<input maxlength="32" v-model='iteminfo.ruleName' class="wd470" type="text" name="">
-						<em v-show='vali.ruleName' class="error">请填写规则名称，长度1~32个字</em>
+						<input maxlength="32" v-model='iteminfo.name' class="wd470" type="text" name="">
+						<em v-show='vali.name' class="error">请填写规则名称，长度1~32个字</em>
 					</div>
 					<div class="search-group">
 						<em class="must-point">*</em>
@@ -221,19 +179,48 @@
 					<div class="search-group">
 						<em class="must-point top2">*</em>
 						<label>适用门店</label>
-						<a @click='checkStore' class='radius current' href="javascript:;">所有门店</a>
-						<a @click='checkStore' class='radius' href="javascript:;">指定门店</a>
-						<store></store>
+						<slot v-if='iteminfo.storeUuids == ""'>
+							<a @click='checkStore' class='radius current' href="javascript:;">所有门店</a>
+							<a @click='checkStore' class='radius' href="javascript:;">指定门店</a>
+						</slot>
+						<slot v-else>
+							<a @click='checkStore' class='radius' href="javascript:;">所有门店</a>
+							<a @click='checkStore' class='radius current' href="javascript:;">指定门店</a>
+							<span class="checkNub">已选{{iteminfo.storeUuids.length}}间</span>
+						</slot>
+						<store :chkid.sync='iteminfo.storeUuids'></store>
 						<em v-show='vali.storeUuids' class="error">请选择适用门店</em>
 					</div>	
 					<div class="search-group">
 						<em class="must-point">*</em>
 						<label>规则名称</label>
-						<span>订单金额 ≥ </span>
-						<input v-model='iteminfo.rule.payMoney ' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
-						<span>元，返点比例</span>
-						<input v-model='iteminfo.rule.ratio' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
-						<span>%</span>
+						<slot v-if='iteminfo.rule.length<3'>
+							<div class="add_rol" v-for='item in iteminfo.rule'>
+								<span>订单金额 ≥ </span>
+								<input v-model='item.payMoney ' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+								<span>元，返点比例</span>
+								<input v-model='item.ratio' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+								<span>%</span>
+								<slot v-if='$index+1 === iteminfo.rule.length'>
+									<span @click='addRule()' class="addRule"></span>
+								</slot>
+								<slot v-else>
+									<span @click='cutRule($index)' class="cutRule"></span>
+								</slot>
+							</div>
+						</slot>
+						<slot v-if='iteminfo.rule.length === 3'>
+							<div class="add_rol" v-for='item in iteminfo.rule'>
+								<span>订单金额 ≥ </span>
+								<input v-model='item.payMoney ' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+								<span>元，返点比例</span>
+								<input v-model='item.ratio' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+								<span>%</span>
+								<slot v-if='$index != 2'>
+									<span @click='cutRule($index)' class="cutRule"></span>
+								</slot>
+							</div>
+						</slot>
 						<em v-show='vali.rule' class="error">请填写返点比例（订单金额需为正整数，返点比例范围1~100的整数）</em>
 					</div>	
 					<div class="search-group flx">
@@ -252,12 +239,12 @@
 						<em class="must-point top2">*</em>
 						<label>红包类型</label>
 						<slot v-if='iteminfo.type=="random"'>
-							<a @click='checkStore' class='radius' href="javascript:;">固定金额</a>
-							<a @click='checkStore' class='radius current' href="javascript:;">随机金额</a>
+							<a @click='cfix' class='radius' href="javascript:;">固定金额</a>
+							<a @click='cfix' class='radius current' href="javascript:;">随机金额</a>
 						</slot>
 						<slot v-else>
-							<a @click='checkStore' class='radius current' href="javascript:;">固定金额</a>
-							<a @click='checkStore' class='radius' href="javascript:;">随机金额</a>
+							<a @click='cfix' class='radius current' href="javascript:;">固定金额</a>
+							<a @click='cfix' class='radius' href="javascript:;">随机金额</a>
 						</slot>
 					</div>
 					<div class="search-group">
@@ -292,8 +279,9 @@
 <style lang='less' scoped>
 .modal-container {
    width: 670px;
-   height:100%;
+   max-height:100%;
    overflow-y: auto;
+   overflow-x:hidden;
    margin: 0px auto;
    padding: 0px 30px 30px 30px;
    background-color: #fff;
@@ -392,6 +380,37 @@
    .search-group{
    	position:relative;
    	display:block;
+   	.checkNub{
+   		color:#63a8eb ;
+   		vertical-align:0;
+   		line-height:1;
+   	}
+   	.add_rol{
+   		display:inline-block;
+   	}
+   	.add_rol:not(:nth-of-type(1)){
+   		position:relative;
+   		left: 56px;
+   		margin-top:10px;
+   	}
+   	.cutRule{
+   		display:inline-block;
+   		width:32px;
+   		height:32px;
+   		vertical-align:-10px;
+   		background-size:100%;
+   		cursor:pointer;
+   		background: url('../views/images/add_rule.png') no-repeat 0 -32px;
+   	}
+   	.addRule{
+   		display:inline-block;
+   		width:32px;
+   		height:32px;
+   		vertical-align:-10px;
+   		background-size:100%;
+   		cursor:pointer;
+   		background: url('../views/images/add_rule.png') no-repeat 0 0;
+   	}
    	.block{
    		display:inline-block;
    		width:380px;

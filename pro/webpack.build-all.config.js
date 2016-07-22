@@ -11,8 +11,8 @@ examples.forEach(function (name) {
 module.exports = {
   entry: entry,
   output: {
-    path: __dirname,
-    filename: '[name]/build.js'
+    path: '../../../../../javamll/st-activity/activity-web/src/main/webapp/views/js',
+    filename: 'build.js'
   },
   module: {
     loaders: [

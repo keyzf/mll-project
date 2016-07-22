@@ -34,7 +34,6 @@ const mutations = {
       }
    },
    ADD_RULES(state,uid){
-      console.log(uid)
       if(uid === undefined){
          state.modalTitle = state.modalType[3].text;
          state.editShow = !state.editShow;
@@ -56,7 +55,6 @@ const mutations = {
       }
       state.itemInfo.id=uid;
       state.itemInfo.state=t;
-      console.log(state.itemInfo)
       state.modalTitle = state.modalType[1].text;
       state.deletShow = !state.deletShow;
    }

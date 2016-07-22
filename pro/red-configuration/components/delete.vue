@@ -17,8 +17,11 @@
 		},
       methods:{
          sure(){
+            var _ = this;
             console.log(this.info);
-            this.deleteItem(this.info.id,this.info.state);
+            $.post('show/saveRule',_.info,function(data){
+               _.deleteItem(_.info.id,_.info.state);
+            })
          }
       }
 	}

@@ -1,6 +1,4 @@
 <script>
-   import zdata from './data.js';
-
 	import {
 		storeShow
 	} from '../vuex/actions';
@@ -17,21 +15,12 @@
 		},
       data(){
          return {
-            storeData:zdata.zNode,
-            hasCheck:[],
-            zNodes:[]
-         }
-      },
-      ready(){
-         this.todo()
-      },
-      methods:{
-         todo(){
-            this.makeTree()
-         },
-         makeTree(){
-            var _ = this;
-            let setting = {
+            storeData : [],
+            hasCheck : [],
+            newStore : [],
+            storeName:'',
+            storeLen:'',
+            setting : {
                check: {
                   enable: true,
                   chkboxType:{ "Y" : "", "N" : "" }
@@ -42,9 +31,79 @@
                   }
                },
                callback:{
-                  onCheck:_.checkStore
+                  onCheck:this.checkStore
                }
-            };
+            }
+         }
+      },
+      props:['chkid'],
+      watch:{
+         chkid(val,oldVal){
+            var _ = this;
+            _.hasCheck= [];
+            $.fn.zTree.init($("#treeDemo"), _.setting, _.newStore);
+            $(val).each(function(){
+               _.choiceByStoreUuid(this)
+            });
+         },
+         hasCheck(val,oldVal){
+            var _ = this;
+            if(val.length<_.storeLen){
+               $('#all_checked').css('background-position','0 0')
+            }
+            if(val.length == _.storeLen){
+               $('#all_checked').css('background-position','-16px 0')
+            }
+         }
+      },
+      ready(){
+         this.todo()
+      },
+      methods:{
+         todo(){
+            var _ =this;
+            $.ajax({
+               type:'post',
+               url:'show/store',
+               data:{"storeName":_.storeName},
+               dataType:'json',
+               async:false,
+               success:function(data){
+                  _.storeData = data;
+                  _.storeLen = data.length;
+                  _.makeTree()
+               }
+            })
+         },
+         choiceByStoreUuid(uid){
+            var _ =this;
+
+            var treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+            var nodes = treeObj.getNodeByParam('uid',uid,null);
+            treeObj.checkNode(nodes);
+            _.hasCheck.push(nodes)
+
+         },
+         checkAll(){
+            var _ =this;
+            let ev = $(event.currentTarget);
+            ev.css('background-position','-16px 0');
+            _.hasCheck = [];
+            let treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+            treeObj.checkAllNodes(true);
+            for( var i in _.newStore){
+               _.hasCheck.push(_.newStore[i]);
+            }
+         },
+         clearAll(){
+            var _ = this;
+            $('#all_checked').css('background-position','0 0');
+            _.hasCheck = [];
+            let treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+            treeObj.checkAllNodes(false);
+         },
+         makeTree(){
+            var _ = this;
             $(_.storeData).each(function(){
                let item = {
                   id:this.id, 
@@ -52,15 +111,12 @@
                   name:this.storeName,
                   uid:this.sysUuid
                };
-               _.zNodes.push(item);
-
-            })
-
-            $.fn.zTree.init($("#treeDemo"), setting, _.zNodes);
+               _.newStore.push(item);
+            });
+            $.fn.zTree.init($("#treeDemo"), _.setting, _.newStore);
 
          },
          checkStore(e, treeId, treeNode){
-            console.log(this.hasCheck);
             if(treeNode.checked === true){
                this.hasCheck.push(treeNode);
             }else{
@@ -68,8 +124,23 @@
                this.hasCheck.splice(n,1)
             }
          },
-         deleteItem(n){
+         deleteItem(n,uid){
+            $('#all_checked').css('position','0 0')
+            var _ = this;
+            var treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+            var ckn = treeObj.getCheckedNodes(true);
+            var nodes = treeObj.getNodeByParam('uid',uid,null)
+            treeObj.checkNode(nodes, false)
             this.hasCheck.splice(n,1)
+         },
+         saveStoreItem(){
+            var _ = this;
+            var newId = []
+            $(_.hasCheck).each(function(){
+               newId.push(this.uid)
+            });
+            _.chkid = newId;
+            _.storeShow();
          }
       }
 	}
@@ -89,14 +160,14 @@
 					<div class="store_tree">
                   <h3>所有门店</h3>
                   <p>
-                     <input type="text" id="txtSearchStoreName" placeholder="输入门店名称" class="wd-273">
+                     <input v-model='storeName' type="text" id="txtSearchStoreName" placeholder="输入门店名称" class="wd-273">
                      <a href="javascript:;" class="search_box" id="btnSearchStore"></a>
                   </p>
                   <ul id="treeDemo" class="ztree"></ul>
                   <div class="store_footer">
-                     <a class="check_box" href="javascript:;" id="all_checked"></a>全选
+                     <a @click='checkAll' class="check_box" href="javascript:;" id="all_checked"></a>全选
                      <span>
-                        共<b id="bStoreTotal">373</b>家门店
+                        共<b id="bStoreTotal">{{newStore.length}}</b>家门店
                      </span>
                   </div>
                </div>
@@ -105,17 +176,17 @@
                   <ul class="chosed_stores" id="chosed_stores">
                      <li v-for='item in hasCheck' :id='item.uid'>
                         {{item.name}}
-                        <a class="close_item" @click='deleteItem($index)' href="javascript:;"></a>
+                        <a class="close_item" @click='deleteItem($index,item.uid)' href="javascript:;"></a>
                      </li>
                   </ul>
                   <div class="chosed_footer">
-                     <input type="submit" id="btnSaveStores" value="保存配置" class="btn-default mr-8">
+                     <input @click='saveStoreItem' type="submit" id="btnSaveStores" value="保存配置" class="btn-default mr-8">
                      <span>
                         已选择
                         <b style="color: #333;font-weight: normal">{{hasCheck.length}}</b>
                         家门店
                      </span>
-                     <span class="clear_all" id="spCleanAll">清空所选</span>
+                     <span @click='clearAll' class="clear_all" id="spCleanAll">清空所选</span>
                   </div>
                </div>
 				</div>
