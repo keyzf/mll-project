@@ -44,7 +44,7 @@
 					if(val.state == ''){
 						_.vali.state = true;
 					};
-					console.log(val.storeUuids.length === 0 && $('.radius').eq(1).hasClass('current'))
+
 					if(val.storeUuids.length === 0 && $('.radius').eq(1).hasClass('current')){
 						_.vali.storeUuids = true;
 					};
@@ -140,11 +140,22 @@
 					console.log(_.iteminfo);
 					_.iteminfo.activityBeginDate = Date.parse(_.iteminfo.activityBeginDate);
 					_.iteminfo.activityEndDate = Date.parse(_.iteminfo.activityEndDate);
-					$.post('/show/saveXXX',_.iteminfo,function(data){
-						if(data.success === true){
-							_.editShow();
-						}
+					$.ajax({
+						type:'post',
+	               url:'show/saveRule',
+	               data:{"storeName":_.storeName},
+	               contentType : 'application/json',
+	               success:function(data){
+	               	if(data.success === true){
+								_.editShow();
+							}
+	               }
 					})
+					// $.post('show/saveRule',_.iteminfo,function(data){
+					// 	if(data.success === true){
+					// 		_.editShow();
+					// 	}
+					// })
 				}
 			}
 		}

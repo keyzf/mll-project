@@ -67,7 +67,7 @@
 			addItem(){
 				this.itemInfo = {
 					name:'',
-					state:'',
+					state:'fixed',
 					storeUuids:'',
 					rule:[{
 						payMoney:'',

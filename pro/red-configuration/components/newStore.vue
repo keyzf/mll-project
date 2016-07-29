@@ -42,9 +42,11 @@
             var _ = this;
             _.hasCheck= [];
             $.fn.zTree.init($("#treeDemo"), _.setting, _.newStore);
-            $(val).each(function(){
-               _.choiceByStoreUuid(this)
-            });
+            setTimeout(function(){
+               $(val).each(function(){
+                  _.choiceByStoreUuid(this)
+               });
+            },0)
          },
          hasCheck(val,oldVal){
             var _ = this;
@@ -58,6 +60,7 @@
       },
       ready(){
          this.todo()
+         this.makeTree()
       },
       methods:{
          todo(){
@@ -71,7 +74,7 @@
                success:function(data){
                   _.storeData = data;
                   _.storeLen = data.length;
-                  _.makeTree()
+                  
                }
             })
          },
