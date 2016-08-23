@@ -21,7 +21,77 @@
 		data(){
 			return {
 				hasCheck:[],
+<<<<<<< HEAD
 				activeDia:'',
+=======
+				vali:{
+					name:false,
+					state:false,
+					storeUuids:false,
+					rule:false,
+					activityDate:false,
+					type:false,
+					avgMoney:false,
+					owerRatio:false
+				}
+			}
+		},
+		watch:{
+			iteminfo:{
+				handler(val, oldVal){
+					var _ = this;
+					/*为空*/
+					if(val.name == ''){
+						_.vali.name = true;
+					};
+					if(val.state == ''){
+						_.vali.state = true;
+					};
+
+					if(val.storeUuids.length === 0 && $('.radius').eq(1).hasClass('current')){
+						_.vali.storeUuids = true;
+					};
+
+					$(val.rule).each(function(){
+						if(this.payMoney == '' || this.ratio == '' || this.ratio >100){
+							_.vali.rule = true;
+							return false;
+						}else{
+							_.vali.rule = false;
+						};
+					});
+					if(val.activityBeginDate == '' || val.activityEndDate == ''){
+						_.vali.activityDate = true;
+					};
+					if(val.avgMoney == '' || val.avgMoney>199 ){
+						_.vali.avgMoney = true;
+					};
+					if(val.owerRatio == '' || val.owerRatio>100 ){
+						_.vali.owerRatio = true;
+					};
+					/*非空*/
+					if(val.name != ''){
+						_.vali.name = false;
+					};
+					if(val.state != ''){
+						_.vali.state = false;
+					};
+					if(val.storeUuids.length > 0 || $('.radius').eq(0).hasClass('current')){
+						_.vali.storeUuids = false;
+					};
+
+					if(val.activityBeginDate != '' && val.activityEndDate != ''){
+						_.vali.activityDate = false;
+					};
+					if(val.avgMoney != '' && val.avgMoney<200 ){
+						_.vali.avgMoney = false;
+					};
+					if(val.owerRatio != '' && val.owerRatio<101 ){
+						_.vali.owerRatio = false;
+					};
+				},
+				deep:true
+>>>>>>> 7b4443e24c0d87895766820c4ea5f6fa6c26295a
 			}
 		},
 		methods:{
@@ -77,20 +147,38 @@
 					}
 				}
 				if(a == true){
+<<<<<<< HEAD
 					_.iteminfo.activityBeginDate = Date.parse(_.iteminfo.activityBeginDate)-28800000;
 					_.iteminfo.activityEndDate = Date.parse($('#cardEndDate').val())+86399999-28800000;
 					$.ajax({
 						type:'post',
 	               url:'show/saveRule',
 	               data:JSON.stringify(_.iteminfo),
+=======
+					console.log(_.iteminfo);
+					_.iteminfo.activityBeginDate = Date.parse(_.iteminfo.activityBeginDate);
+					_.iteminfo.activityEndDate = Date.parse(_.iteminfo.activityEndDate);
+					$.ajax({
+						type:'post',
+	               url:'show/saveRule',
+	               data:{"storeName":_.storeName},
+>>>>>>> 7b4443e24c0d87895766820c4ea5f6fa6c26295a
 	               contentType : 'application/json',
 	               success:function(data){
 	               	if(data.success === true){
 								_.editShow();
+<<<<<<< HEAD
 								_.$dispatch('list-events');
+=======
+>>>>>>> 7b4443e24c0d87895766820c4ea5f6fa6c26295a
 							}
 	               }
 					})
+					// $.post('show/saveRule',_.iteminfo,function(data){
+					// 	if(data.success === true){
+					// 		_.editShow();
+					// 	}
+					// })
 				}
 			},
 			valiCon(){

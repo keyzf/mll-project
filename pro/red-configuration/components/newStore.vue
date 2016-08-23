@@ -42,9 +42,11 @@
             var _ = this;
             _.hasCheck= [];
             $.fn.zTree.init($("#treeDemo"), _.setting, _.newStore);
-            $(val).each(function(){
-               _.choiceByStoreUuid(this)
-            });
+            setTimeout(function(){
+               $(val).each(function(){
+                  _.choiceByStoreUuid(this)
+               });
+            },0)
          },
          hasCheck(val,oldVal){
             var _ = this;
@@ -58,7 +60,12 @@
          }
       },
       ready(){
+<<<<<<< HEAD
          this.todo();
+=======
+         this.todo()
+         this.makeTree()
+>>>>>>> 7b4443e24c0d87895766820c4ea5f6fa6c26295a
       },
       methods:{
          todo(){
@@ -72,12 +79,16 @@
                success:function(data){
                   _.storeData = data;
                   _.storeLen = data.length;
+<<<<<<< HEAD
                   _.makeTree()
                   _.hasCheck= [];
                   $.fn.zTree.init($("#treeDemo"), _.setting, _.newStore);
                   $(_.chkid).each(function(){
                      _.choiceByStoreUuid(this)
                   });
+=======
+                  
+>>>>>>> 7b4443e24c0d87895766820c4ea5f6fa6c26295a
                }
             })
          },

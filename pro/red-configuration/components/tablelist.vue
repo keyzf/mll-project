@@ -111,9 +111,14 @@
 			addItem(){
 				this.itemInfo = {
 					name:'',
+<<<<<<< HEAD
 					state:'',
 					all:true,
 					storeUuids:[],
+=======
+					state:'fixed',
+					storeUuids:'',
+>>>>>>> 7b4443e24c0d87895766820c4ea5f6fa6c26295a
 					rule:[{
 						payMoney:'',
 						ratio:''

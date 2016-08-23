@@ -16,6 +16,7 @@ class Store {
    *        - {Boolean} strict
    */
 
+
   constructor ({
     state = {},
     mutations = {},

@@ -1,17 +1,25 @@
 var examples = [
   'red-configuration'
+];
+
+var baseroot = [
+  {op:'../views/views/op'}
+]
+
+var root = [
+  {'op_red':baseroot[0].op+'/red/js'}
 ]
 
 var entry = {}
 examples.forEach(function (name) {
-  console.log(name)
+  console.log(root[0].op_red)
   entry[name] = ['./build/bind.js', './pro/' + name + '/main.js']
 })
 
 module.exports = {
   entry: entry,
   output: {
-    path: '../../../../../javamll/st-activity/activity-web/src/main/webapp/views/js',
+    path: root[0].op_red,
     filename: 'build.js'
   },
   module: {
