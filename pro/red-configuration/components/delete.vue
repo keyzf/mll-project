@@ -18,9 +18,15 @@
       methods:{
          sure(){
             var _ = this;
-            console.log(this.info);
-            $.post('show/saveRule',_.info,function(data){
-               _.deleteItem(_.info.id,_.info.state);
+            $.ajax({
+               type:'post',
+               url:'show/saveRule',
+               data:JSON.stringify(_.info),
+               contentType : 'application/json',
+               success(data){
+                  _.$dispatch('list-events');
+                  _.deleteItem(_.info.id,_.info.state);
+               }
             })
          }
       }
@@ -80,7 +86,7 @@
    line-height: 1;
    padding-bottom: 15px;
    padding-top: 25px;
-   
+
    font-size: 25px;
    text-align: center;
    font-weight: normal;

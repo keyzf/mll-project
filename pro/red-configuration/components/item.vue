@@ -17,77 +17,11 @@
 				editShow,storeShow
 			}
 		},
-		props:["iteminfo"],
+		props:["iteminfo","vali"],
 		data(){
 			return {
 				hasCheck:[],
-				vali:{
-					name:false,
-					state:false,
-					storeUuids:false,
-					rule:false,
-					activityDate:false,
-					type:false,
-					avgMoney:false,
-					owerRatio:false
-				}
-			}
-		},
-		watch:{
-			iteminfo:{
-				handler(val, oldVal){
-					var _ = this;
-					/*为空*/
-					if(val.name == ''){
-						_.vali.name = true;
-					};
-					if(val.state == ''){
-						_.vali.state = true;
-					};
-					console.log(val.storeUuids.length === 0 && $('.radius').eq(1).hasClass('current'))
-					if(val.storeUuids.length === 0 && $('.radius').eq(1).hasClass('current')){
-						_.vali.storeUuids = true;
-					};
-
-					$(val.rule).each(function(){
-						if(this.payMoney == '' || this.ratio == '' || this.ratio >100){
-							_.vali.rule = true;
-							return false;
-						}else{
-							_.vali.rule = false;
-						};
-					});
-					if(val.activityBeginDate == '' || val.activityEndDate == ''){
-						_.vali.activityDate = true;
-					};
-					if(val.avgMoney == '' || val.avgMoney>199 ){
-						_.vali.avgMoney = true;
-					};
-					if(val.owerRatio == '' || val.owerRatio>100 ){
-						_.vali.owerRatio = true;
-					};
-					/*非空*/
-					if(val.name != ''){
-						_.vali.name = false;
-					};
-					if(val.state != ''){
-						_.vali.state = false;
-					};
-					if(val.storeUuids.length > 0 || $('.radius').eq(0).hasClass('current')){
-						_.vali.storeUuids = false;
-					};
-
-					if(val.activityBeginDate != '' && val.activityEndDate != ''){
-						_.vali.activityDate = false;
-					};
-					if(val.avgMoney != '' && val.avgMoney<200 ){
-						_.vali.avgMoney = false;
-					};
-					if(val.owerRatio != '' && val.owerRatio<101 ){
-						_.vali.owerRatio = false;
-					};
-				},
-				deep:true
+				activeDia:'',
 			}
 		},
 		methods:{
@@ -99,20 +33,25 @@
 				$(e.currentTarget).parent().find('a').removeClass('current');
 				$(e.currentTarget).addClass('current');
 				if(e.currentTarget.innerHTML === '指定门店'){
-					_.storeShow();
+					// _.storeShow();
+					_.activeDia = 'store';
+					_.iteminfo.all = false;
 				}
 				if(e.currentTarget.innerHTML === '所有门店'){
-					_.iteminfo.storeUuids='';
+					_.iteminfo.storeUuids=[];
+					_.iteminfo.all = true;
 				}
 			},
 			cfix(){
 				var _ = this;
 				var et = event.currentTarget.innerHTML;
 				if(et == '随机金额'){
-					_.iteminfo.type = 'random'
+					_.iteminfo.type = 'random';
+					_.iteminfo.avgMoney = '2';
 				}
 				if(et == '固定金额'){
-					_.iteminfo.type = 'fixed'
+					_.iteminfo.type = 'fixed';
+					_.iteminfo.avgMoney = '1';
 				}
 			},
 			cutRule(n){
@@ -127,6 +66,7 @@
 			},
 			saveItem(){
 				var _ = this;
+				_.valiCon();
 				var a = false;
 				for(var i in _.vali){
 					if(_.vali[i] == true){
@@ -137,15 +77,79 @@
 					}
 				}
 				if(a == true){
-					console.log(_.iteminfo);
-					_.iteminfo.activityBeginDate = Date.parse(_.iteminfo.activityBeginDate);
-					_.iteminfo.activityEndDate = Date.parse(_.iteminfo.activityEndDate);
-					$.post('/show/saveXXX',_.iteminfo,function(data){
-						if(data.success === true){
-							_.editShow();
-						}
+					_.iteminfo.activityBeginDate = Date.parse(_.iteminfo.activityBeginDate)-28800000;
+					_.iteminfo.activityEndDate = Date.parse($('#cardEndDate').val())+86399999-28800000;
+					$.ajax({
+						type:'post',
+	               url:'show/saveRule',
+	               data:JSON.stringify(_.iteminfo),
+	               contentType : 'application/json',
+	               success:function(data){
+	               	if(data.success === true){
+								_.editShow();
+								_.$dispatch('list-events');
+							}
+	               }
 					})
 				}
+			},
+			valiCon(){
+				var _ = this;
+				/*为空*/
+				if(_.iteminfo.name == ''){
+					_.vali.name = true;
+				};
+
+				if(_.iteminfo.storeUuids.length === 0 || _.iteminfo.all == false ){
+					_.vali.storeUuids = true;
+				};
+
+				$(_.iteminfo.rule).each(function(){
+					if(this.payMoney == '' || this.ratio == '' || this.ratio >100){
+						_.vali.rule = true;
+						return false;
+					}else{
+						_.vali.rule = false;
+					}
+
+					if(this.payMoney*this.ratio*0.01 < 1){
+						_.vali.ruleRatio = true;
+						return false;
+					}
+
+					if(this.payMoney*this.ratio*0.01 >= 1) {
+						_.vali.ruleRatio = false;
+					}
+				});
+
+				if(_.iteminfo.activityBeginDate == '' || _.iteminfo.activityEndDate == ''){
+					_.vali.activityDate = true;
+				};
+				if(_.iteminfo.avgMoney == '' || _.iteminfo.avgMoney>199 || _.iteminfo.avgMoney<1 ){
+					_.vali.avgMoney = true;
+				};
+				if(_.iteminfo.owerRatio>100 || _.iteminfo.owerRatio<1){
+					_.vali.owerRatio = true;
+
+				};
+				/*非空*/
+				if(_.iteminfo.name != ''){
+					_.vali.name = false;
+				};
+
+				if(_.iteminfo.storeUuids.length > 0 || _.iteminfo.all == true ){
+					_.vali.storeUuids = false;
+				};
+
+				if(_.iteminfo.activityBeginDate != '' && _.iteminfo.activityEndDate != ''){
+					_.vali.activityDate = false;
+				};
+				if(_.iteminfo.avgMoney != '' && _.iteminfo.avgMoney<200 && _.iteminfo.avgMoney>0 ){
+					_.vali.avgMoney = false;
+				};
+				if(_.iteminfo.owerRatio == '' || _.iteminfo.owerRatio<101 && _.iteminfo.owerRatio>0 ){
+					_.vali.owerRatio = false;
+				};
 			}
 		}
 	}
@@ -165,13 +169,14 @@
 					<div class="search-group">
 						<em class="must-point">*</em>
 						<label>规则名称</label>
-						<input maxlength="32" v-model='iteminfo.name' class="wd470" type="text" name="">
+						<input style="padding-right:60px" maxlength="32" v-model='iteminfo.name' class="wd470" type="text" name="">
+						<strong class="nub">{{iteminfo.name.length}}/32</strong>
 						<em v-show='vali.name' class="error">请填写规则名称，长度1~32个字</em>
 					</div>
 					<div class="search-group">
 						<em class="must-point">*</em>
 						<label>有效期</label>
-						<input id='cardStartDate' v-model='iteminfo.activityBeginDate' class="wd100" type="text" name="">
+						<input id='cardStartDate' :value='iteminfo.activityStartDate' class="wd100" type="text" name="">
 						<span>至</span>
 						<input id='cardEndDate' v-model='iteminfo.activityEndDate' class="wd100" type="text" name="">
 						<em v-show='vali.activityDate' class="error">请填写有效期</em>
@@ -179,7 +184,7 @@
 					<div class="search-group">
 						<em class="must-point top2">*</em>
 						<label>适用门店</label>
-						<slot v-if='iteminfo.storeUuids == ""'>
+						<slot v-if='iteminfo.all == true'>
 							<a @click='checkStore' class='radius current' href="javascript:;">所有门店</a>
 							<a @click='checkStore' class='radius' href="javascript:;">指定门店</a>
 						</slot>
@@ -188,18 +193,18 @@
 							<a @click='checkStore' class='radius current' href="javascript:;">指定门店</a>
 							<span class="checkNub">已选{{iteminfo.storeUuids.length}}间</span>
 						</slot>
-						<store :chkid.sync='iteminfo.storeUuids'></store>
+						<component :show.sync='activeDia' :is="activeDia" :chkid.sync='iteminfo.storeUuids'></component>
 						<em v-show='vali.storeUuids' class="error">请选择适用门店</em>
-					</div>	
+					</div>
 					<div class="search-group">
 						<em class="must-point">*</em>
-						<label>规则名称</label>
+						<label>返点比例</label>
 						<slot v-if='iteminfo.rule.length<3'>
 							<div class="add_rol" v-for='item in iteminfo.rule'>
 								<span>订单金额 ≥ </span>
-								<input v-model='item.payMoney ' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+								<input v-model='item.payMoney ' class="wd100" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'')" onblur="this.value=this.value.replace(/[^\d]/g,'')">
 								<span>元，返点比例</span>
-								<input v-model='item.ratio' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+								<input v-model='item.ratio' class="wd100" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'')" onblur="this.value=this.value.replace(/[^\d]/g,'')">
 								<span>%</span>
 								<slot v-if='$index+1 === iteminfo.rule.length'>
 									<span @click='addRule()' class="addRule"></span>
@@ -212,9 +217,9 @@
 						<slot v-if='iteminfo.rule.length === 3'>
 							<div class="add_rol" v-for='item in iteminfo.rule'>
 								<span>订单金额 ≥ </span>
-								<input v-model='item.payMoney ' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+								<input v-model='item.payMoney' class="wd100" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'')" onblur="this.value=this.value.replace(/[^\d]/g,'')">
 								<span>元，返点比例</span>
-								<input v-model='item.ratio' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+								<input v-model='item.ratio' class="wd100" type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'')" onblur="this.value=this.value.replace(/[^\d]/g,'')">
 								<span>%</span>
 								<slot v-if='$index != 2'>
 									<span @click='cutRule($index)' class="cutRule"></span>
@@ -222,18 +227,18 @@
 							</div>
 						</slot>
 						<em v-show='vali.rule' class="error">请填写返点比例（订单金额需为正整数，返点比例范围1~100的整数）</em>
-					</div>	
+						<em v-show='vali.ruleRatio && vali.rule==false' class="error">由于红包金额最低要1元,请重新输入返点比例</em>
+					</div>
 					<div class="search-group flx">
 						<div>
-							<em style="top:13px" class="must-point">*</em>
 							<label>金主所得</label>
-							<input v-model='iteminfo.owerRatio' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
+							<input v-model='iteminfo.owerRatio' class="wd100" type="text" style="margin-left: 10px;" onkeyup="this.value=this.value.replace(/[^\d]/g,'')" onblur="this.value=this.value.replace(/[^\d]/g,'')">
 							<span>%</span>
 						</div>
 						<div>
 							<span>订单拥有者可以获得红包金额的比例，当计算剩余金额不足1元时，则金主获得全部金额</span>
 						</div>
-					</div>	
+					</div>
 					<em v-show='vali.owerRatio' class="error anoth">请输入范围1~100的整数</em>
 					<div class="search-group">
 						<em class="must-point top2">*</em>
@@ -249,9 +254,13 @@
 					</div>
 					<div class="search-group">
 						<em class="must-point">*</em>
-						<label>每人领取</label>
-						<input v-model='iteminfo.avgMoney' class="wd100" type="text"  onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')">
-						<span>请输入1~199的数值</span>
+						<label v-if="iteminfo.type == 'fixed'">每人领取</label>
+						<label v-if="iteminfo.type == 'random'">平均领取</label>
+						<input v-model='iteminfo.avgMoney' class="wd100" type="text" style="margin-left: 10px;" onkeyup="this.value=this.value.replace(/[^\d]/g,'')" onblur="this.value=this.value.replace(/[^\d]/g,'')">
+						<span v-if="iteminfo.type == 'fixed'">请输入1~199的数值</span>
+						<span v-if="iteminfo.type == 'random'" class="randomTips">
+							请输入1~199的数值，红包金额会有随机产生,平均每人可领取该值,金额会有上下浮动
+						</span>
 						<em v-show='vali.avgMoney' class="error">请填写正确金额</em>
 					</div>
 					<div class="search-group">
@@ -277,6 +286,14 @@
 </template>
 
 <style lang='less' scoped>
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button{
+    -webkit-appearance: none !important;
+    margin: 0;
+}
+
+input[type="number"]{-moz-appearance:textfield;}
+
 .modal-container {
    width: 670px;
    max-height:100%;
@@ -309,7 +326,7 @@
    line-height: 1;
    padding-bottom: 15px;
    padding-top: 25px;
-   
+
    font-size: 25px;
    text-align: center;
    font-weight: normal;
@@ -380,11 +397,25 @@
    .search-group{
    	position:relative;
    	display:block;
+   	input[type="number"]{
+			font-size: 14px;
+			margin-left: 10px;
+   	}
    	.checkNub{
    		color:#63a8eb ;
    		vertical-align:0;
    		line-height:1;
    	}
+   	.nub{
+			font-size:14px;
+			font-weight:normal;
+			position:absolute;
+			right:90px;
+			top:0px;
+			height:34px;
+			line-height:34px;
+			color:#999;
+		}
    	.add_rol{
    		display:inline-block;
    	}
@@ -502,5 +533,12 @@
 .modal-leave .modal-container{
    -webkit-transform: scale(1.1);
    transform: scale(1.1);
+}
+
+.randomTips {
+	display: inline-block;
+    width: 300px;
+    vertical-align: top;
+    line-height: 1.1;
 }
 </style>

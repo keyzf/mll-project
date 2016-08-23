@@ -19,42 +19,67 @@
 		},
 		data(){
 			return {
-				newMon:'',
+				newMon:0,
 				newTel:'',
 				monSh:false,
 				telSh:false,
 				saveDep:{
 					deposit:'',
 					phone:'',
-				}
+				},
+				newMonWord:"字符长度不能大于9位"
 			}
 		},
 		watch:{
 			newMon (val,oldVal){
-				if(val == ''){
+				if(val == ''|| val <= 0 ){
 					this.monSh = true;
+					this.newMonWord = '请输入大于零的数字'
 				}
-				
-				if(val !=''){
+
+				if(val.length > 9){
+					this.monSh = true;
+					this.newMonWord = '字符长度不能大于9位'
+				}
+
+				if(val !='' && val > 0 && val.length<10){
 					this.monSh = false;
 				}
 			},
 			newTel (val,oldVal){
-				if(val == '' || !(/^1[3|4|5|7|8]\d{9}$/.test(val)) ){
+				if(val == '' || val.length!=11 ){
 					this.telSh = true;
 				}
-				if(val !='' && (/^1[3|4|5|7|8]\d{9}$/.test(val))){
+				if(val !='' && val.length ==11){
 					this.telSh = false;
 				}
+			},
+			deposit :{
+				handler(val,oldVal){
+					this.todo()
+				},
+				deep:true
 			}
 		},
 		ready(){
-			this.todo();
+			// this.todo();
 		},
 		methods:{
 			todo(){
 				this.newMon = this.deposit.deposit;
 				this.newTel = this.deposit.phone;
+			},
+			amount(th){
+				var _ = this;
+				var regStrs = [
+			        ['[^\\d\\.]+$', ''], //禁止录入任何非数字和点
+			        ['\\.(\\d?)\\.+', '.$1'], //禁止录入两个以上的点
+			        ['^(\\d+\\.\\d{2}).+', '$1'] //禁止录入小数点后两位以上
+			    ];
+			    for(var i=0; i<regStrs.length; i++){
+			        var reg = new RegExp(regStrs[i][0]);
+			        _.newMon = _.newMon.replace(reg, regStrs[i][1]);
+			    }
 			},
 			changeDepose(){
 				var _ =this;
@@ -62,10 +87,10 @@
 					_.saveDep.deposit = this.newMon;
 					_.saveDep.phone = this.newTel;
 					$.post('show/saveDeposit',_.saveDep,function(data){
-						console.log(data)
 						if(data.success === true){
 							_.deposit.deposit = _.newMon;
 							_.deposit.phone = _.newTel;
+							_.$dispatch('getDepos');
 							_.modalShow();
 						}else{
 							alert('修改失败')
@@ -92,14 +117,14 @@
 					<div class="search-group">
 						<em class="must-point">*</em>
 						<label>预存款</label>
-						<input v-model='newMon' onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')"  type="text">
+						<input style="margin-left:10px" maxlength="9" v-model='newMon' @keyup='amount(newMon)' type="number">
 						<span>元</span>
-						<i v-show='monSh' class="error">请输入大于0的数字</i>
+						<i v-show='monSh' class="error">{{newMonWord}}</i>
 					</div>
 					<div class="search-group">
 						<em class="must-point">*</em>
 						<label>客服电话</label>
-						<input v-model='newTel' type="text" onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')" maxlength="11">
+						<input style="margin-left:10px;" v-model='newTel' type="number" onkeyup="this.value=this.value.replace(/\D/g,'')" onafterpaste="this.value=this.value.replace(/\D/g,'')" maxlength="11">
 						<span>请填写手机号码</span>
 						<i v-show='telSh' class="error">请输入正确的手机号码</i>
 					</div>
@@ -117,6 +142,14 @@
 </template>
 
 <style lang='less' scoped>
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button{
+    -webkit-appearance: none !important;
+    margin: 0; 
+}
+
+input[type="number"]{-moz-appearance:textfield;}
+
 .modal-container {
    width: 480px;
    box-sizing:border-box;

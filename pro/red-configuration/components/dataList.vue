@@ -2,7 +2,10 @@
 	<div class="listContent">
 		<div class="left_content">
 			<p class="mon">预存款：<span>{{deposit.deposit}}</span>元</p>
-			<p class="tel">客服电话：<span>{{deposit.phone}}</span></p>
+			<p class="tel">客服电话：
+				<span v-if='deposit.phone == ""'>—</span>
+				<span v-else>{{deposit.phone}}</span>
+			</p>
 			<a @click='modalShow(0)' href="javascript:;">修改》</a>
 		</div>
 		<div class="right_content">
@@ -13,7 +16,6 @@
 </template>
 <script>
 	import modal from './modal.vue';
-   import data from './data.js'
 
 	import {
 		modalShow
@@ -31,11 +33,22 @@
 		},
       data(){
          return {
-            deposit:data.deposit,
+            deposit:{},
          }
+      },
+      ready(){
+      	this.todo()
       },
       methods:{
       	todo(){
+      		var _ =this;
+      		$.post('show/deposit',function(data){
+      			_.deposit = data;
+      		})
+      	}
+      },
+      events:{
+      	getDepos(){
       		var _ =this;
       		$.post('show/deposit',function(data){
       			_.deposit = data;

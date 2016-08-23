@@ -1,7 +1,6 @@
 <script>
 	import item from './item.vue';
 	import delitem from './delete.vue';
-	import data from './data.js';
 
 	import {
 		modalShow,
@@ -24,7 +23,10 @@
 		},
 		data (){
 			return {
-				tableInfo:data.ruleList,
+				tableInfo:{
+					content:[]
+				},
+				currentPage:0,
 				itemInfo:{
 					name:'',
 					state:'',
@@ -42,54 +44,120 @@
 				/*规则名称类型*/
 				ruleList:{
 					ruleName:'',
-					state:''
+					state:'',
+					size:'10',
+					page:0
+				},
+				/*item验证码*/
+				vali:{
+					name:false,
+					state:false,
+					storeUuids:false,
+					rule:false,
+					ruleRatio: false,
+					activityDate:false,
+					type:false,
+					avgMoney:false,
+					owerRatio:false
 				}
 			}
 		},
 		ready(){
 			this.todo()
 		},
+    watch:{
+      currentPage(val,oldVal){
+        this.todo();
+      }
+    },
 		methods:{
 			todo(rule){
 				var _ = this;
-				$.post('show/ruleList',rule,function(data){
+
+				$.post('show/ruleList',_.ruleList,function(data){
 					$(data.content).each(function(){
 						this.activityBeginDate = _.changeDate(this.activityBeginDate);
 						this.activityEndDate = _.changeDate(this.activityEndDate);
 					})
+
 					_.tableInfo = data;
+
+					if (data.total > 10) {
+					   function pageselectCallback(page_id, jq) {
+					      _.ruleList.page = page_id;
+                		_.currentPage = page_id;
+					      return false;
+					   }
+					   $("#Pagination").pagination(data.total, {
+					      callback: pageselectCallback,//PageCallback() 为翻页调用次函数。
+					      prev_text: " 上一页",
+					      next_text: "下一页 ",
+					      items_per_page: 10, //每页的数据个数
+					      num_display_entries: 4, //两侧首尾分页条目数
+					      current_page: _.currentPage,   //当前页码
+					      num_edge_entries: 2 //连续分页主体部分分页条目数
+					   });
+					} else {
+					   $("#Pagination").html('');
+					}
 				})
 			},
 			searchItem(){
 				var _ = this;
+				_.currentPage = 0;
+				_.ruleList.page = 0;
 				_.todo(_.ruleList)
 			},
 			addItem(){
 				this.itemInfo = {
 					name:'',
 					state:'',
-					storeUuids:'',
+					all:true,
+					storeUuids:[],
 					rule:[{
 						payMoney:'',
 						ratio:''
 					}],
-					activityBeginDate:this.changeDate(Date.parse(new Date())),
-					activityEndDate:this.changeDate(Date.parse(new Date())),
+					activityBeginDate:'',
+					activityEndDate:'',
 					type:'fixed',
-					avgMoney:'',
+					avgMoney:'1',
 					owerRatio:''
 				};
-				this.init(new Date);
+				this.vali={
+					name:false,
+					state:false,
+					storeUuids:false,
+					rule:false,
+					activityDate:false,
+					type:false,
+					avgMoney:false,
+					owerRatio:false,
+					ruleRatio:false
+				};
+				this.init();
 				this.editShow();
 			},
 			editItem(uid){
 				var _ = this;
+				_.vali={
+					name:false,
+					state:false,
+					storeUuids:false,
+					rule:false,
+					activityDate:false,
+					type:false,
+					avgMoney:false,
+					owerRatio:false,
+					ruleRatio:false
+				}
 				$.post('show/ruleDetail',{id:uid},function(data){
 					data.activityBeginDate = _.changeDate(data.activityBeginDate);
 					data.activityEndDate = _.changeDate(data.activityEndDate);
 					_.itemInfo = data;
-					_.init(_.itemInfo.activityBeginDate)
-					_.editShow();
+					// $('#cardEndDate').val(_.itemInfo.activityEndDate);
+					_.init(_.itemInfo.activityBeginDate);
+					_.editShow(uid);
 				})
 			},
 			init(beg){
@@ -101,9 +169,15 @@
 					init:function(){
 					   cardStay.inputVal();
 					   // cardStay.today = new Date($("#cardStartDate").val());
+					   if(!beg){
+					   	$('#cardStartDate').val('')
+					   	_.itemInfo.activityBeginDate = ''
+					   }
 					   cardStay.endFun();
 					   cardStay.startFun();
-					   cardStay.end.datepicker('option', 'minDate', new Date(moment(cardStay.today).add('days', 0)));
+					   cardStay.end.datepicker('option', 'minDate', new Date(moment(_.itemInfo.activityBeginDate).add('days', 0)));
+					   $('#cardEndDate').val(_.itemInfo.activityEndDate)
+
 					},
 					startFun:function(){
 					   cardStay.start.datepicker({
@@ -118,6 +192,7 @@
 					       minDate : -36000,
 					       maxDate:36000,
 					       onSelect:function(dateText,inst){
+					       		_.itemInfo.activityBeginDate = dateText;
 					           cardStay.end.datepicker('option', 'minDate', new Date(moment(dateText).add('days',0)));
 					           // cardStay.end.datepicker('option', 'maxDate', new Date(moment(new Date()).add('days', -1)));
 					       }
@@ -175,7 +250,7 @@
 					   return strDay;
 					},
 					inputVal:function(){
-					   cardStay.inputTimes(cardStay.start,-7);
+					   cardStay.inputTimes(cardStay.start,0);
 					   cardStay.inputTimes(cardStay.end,-1);
 					},
 					inputTimes:function(obj,day){
@@ -200,8 +275,38 @@
 				if(date<10){
 					date = '0'+date;
 				}
-				return year+"-"+month+"-"+date;     
+				return year+"-"+month+"-"+date;
 			},
+		},
+		events:{
+			'list-events':function(){
+				var _ = this;
+				$.post('show/ruleList',_.ruleList,function(data){
+					$(data.content).each(function(){
+						this.activityBeginDate = _.changeDate(this.activityBeginDate);
+						this.activityEndDate = _.changeDate(this.activityEndDate);
+					})
+					_.tableInfo = data;
+					if (data.total > 10) {
+					   function pageselectCallback(page_id, jq) {
+					      _.ruleList.page = page_id;
+                _.currentPage = page_id;
+					      return false;
+					   }
+					   $("#Pagination").pagination(data.total, {
+					      callback: pageselectCallback,//PageCallback() 为翻页调用次函数。
+					      prev_text: " 上一页",
+					      next_text: "下一页 ",
+					      items_per_page: 10, //每页的数据个数
+					      num_display_entries: 4, //两侧首尾分页条目数
+					      current_page: _.currentPage,   //当前页码
+					      num_edge_entries: 2 //连续分页主体部分分页条目数
+					   });
+					} else {
+					   $("#Pagination").html('');
+					}
+				})
+			}
 		}
 	}
 </script>
@@ -218,6 +323,7 @@
 				<option selected>全部</option>
 				<option>进行中</option>
 				<option>已过期</option>
+				<option>未开始</option>
 				<option>已停用</option>
 			</select>
 		</div>
@@ -228,53 +334,82 @@
 		<table class="table-list">
 			<thead>
 				<tr>
-					<th>
+					<th width="30%">
 						规则名称
 						<div class="opr-tips">
                      <span class="tips-icon">?</span>
                      <div class="opr-tips-content">
                         <dl class="tips-list">
-                           <dd>一个门店可配置多个红包规则，已发放红包金额最多的规则为准</dd>
+                           <dd>一个门店可配置多个红包规则，以发放红包金额最多的规则为准</dd>
                         </dl>
                      </div>
                   </div>
 					</th>
-					<th>有效时间</th>
-					<th>状态</th>
-					<th>操作</th>
+					<th width="30%">有效时间</th>
+					<th width="20%">状态</th>
+					<th width="20%">操作</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for='item in tableInfo.content'>
-					<td>{{item.name}}</td>
-					<td>{{item.activityBeginDate}}~{{item.activityEndDate}}</td>
-					<td>{{item.state}}</td>
-					<td>
-						<div class="operate-group">
-							<a href="javascript:;" @click='editItem(item.id)'>编辑</a>
-							<slot v-if='item.state=="已过期"||item.state=="已停用"||item.state=="未开始"'>
-								<a href="javascript:;" @click='deleteItem(item.id,1)'>启用</a>
-							</slot>
-							<slot v-else>
-								<a class="delete" href="javascript:;" @click='deleteItem(item.id,0)'>停用</a>
-							</slot>
-						</div>
-					</td>
-				</tr>
+				<template v-if='tableInfo.content.length == 0'>
+					<tr>
+						<td colspan="30">
+							<span class="noData"></span>
+						</td>
+					</tr>
+				</template>
+				<template v-else>
+					<tr v-for='item in tableInfo.content'>
+						<td>{{item.name}}</td>
+						<td>{{item.activityBeginDate}}~{{item.activityEndDate}}</td>
+						<td>{{item.state}}</td>
+						<td>
+							<div class="operate-group">
+								<a href="javascript:;" @click='editItem(item.id)'>编辑</a>
+								<slot v-if='item.state=="已停用"'>
+									<a style="margin:0" href="javascript:;" @click='deleteItem(item.id,1)'>启用</a>
+								</slot>
+								<slot v-else>
+									<a class="delete" href="javascript:;" @click='deleteItem(item.id,0)'>停用</a>
+								</slot>
+							</div>
+						</td>
+					</tr>
+				</template>
 			</tbody>
 		</table>
-		<div id="pageNav"></div>
+		<div id="Pagination" class="pageNav"></div>
 	</div>
-	<item :iteminfo.sync='itemInfo'></item>
+	<item :iteminfo.sync='itemInfo' :vali.sync='vali'></item>
 	<delitem></delitem>
 </template>
 
 <style scoped lang='less'>
+	.table-list{
+		table-layout:fixed;
+		tbody{
+			td{
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+
+	}
 	.table-form{
 		margin-top:20px;
 		.ml30{
 			margin-left:10px;
 		}
+	}
+	.noData{
+		display: inline-block;
+		width: 100%;
+		height: 400px;
+		background: url(../views/images/noinfo.png) center center no-repeat;
+	}
+	.pageNav{
+		margin-top:20px;
 	}
 	.opr-tips{
 	    position: relative;

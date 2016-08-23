@@ -6,7 +6,6 @@
 	export default{
 		vuex: {
 			getters: {
-				show: state => state.storeShow,
 				title: state => state.modalTitle
 			},
 			actions: {
@@ -33,10 +32,11 @@
                callback:{
                   onCheck:this.checkStore
                }
-            }
+            },
+            tempList:  []
          }
       },
-      props:['chkid'],
+      props:['chkid','show'],
       watch:{
          chkid(val,oldVal){
             var _ = this;
@@ -48,6 +48,7 @@
          },
          hasCheck(val,oldVal){
             var _ = this;
+            this.tempList = val;
             if(val.length<_.storeLen){
                $('#all_checked').css('background-position','0 0')
             }
@@ -57,7 +58,7 @@
          }
       },
       ready(){
-         this.todo()
+         this.todo();
       },
       methods:{
          todo(){
@@ -72,12 +73,16 @@
                   _.storeData = data;
                   _.storeLen = data.length;
                   _.makeTree()
+                  _.hasCheck= [];
+                  $.fn.zTree.init($("#treeDemo"), _.setting, _.newStore);
+                  $(_.chkid).each(function(){
+                     _.choiceByStoreUuid(this)
+                  });
                }
             })
          },
          choiceByStoreUuid(uid){
             var _ =this;
-
             var treeObj = $.fn.zTree.getZTreeObj("treeDemo");
             var nodes = treeObj.getNodeByParam('uid',uid,null);
             treeObj.checkNode(nodes);
@@ -114,14 +119,18 @@
                _.newStore.push(item);
             });
             $.fn.zTree.init($("#treeDemo"), _.setting, _.newStore);
-
          },
          checkStore(e, treeId, treeNode){
+            var _ = this;
             if(treeNode.checked === true){
                this.hasCheck.push(treeNode);
             }else{
-               var n = $.inArray(treeNode,this.hasCheck)
-               this.hasCheck.splice(n,1)
+               $(_.hasCheck).each(function(i){
+                  if(this.uid == treeNode.uid){
+                     _.hasCheck.splice(i,1);
+                     return false;
+                  }
+               })
             }
          },
          deleteItem(n,uid){
@@ -131,7 +140,8 @@
             var ckn = treeObj.getCheckedNodes(true);
             var nodes = treeObj.getNodeByParam('uid',uid,null)
             treeObj.checkNode(nodes, false)
-            this.hasCheck.splice(n,1)
+            // this.hasCheck.splice(n,1)
+            this.tempList.splice(n,1)
          },
          saveStoreItem(){
             var _ = this;
@@ -140,28 +150,53 @@
                newId.push(this.uid)
             });
             _.chkid = newId;
-            _.storeShow();
+            _.show='';
+         },
+         searchStore(){
+            var _ = this;
+            $.post('show/store',{"storeName":_.storeName},function(data){
+               _.storeData = data;
+               _.newStore = [];
+               $(data).each(function(i){
+                  var item = {
+                     id:this.id, 
+                     pId:this.storeId, 
+                     name:this.storeName,
+                     uid:this.sysUuid,
+                     checked:false,
+                  };
+                  $(_.hasCheck).each(function(j){
+                     if(this.uid == item.uid){
+                        item.checked = true;
+                     }
+                  })
+                  _.newStore.push(item);
+               });
+               $.fn.zTree.init($("#treeDemo"), _.setting, _.newStore);
+               var treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+               
+            })
          }
       }
 	}
 </script>
 
 <template>
-	<div v-show='show' class="modal-mask" transition="modal">
+	<div class="modal-mask" transition="modal">
 		<div class="modal-wrapper">
 			<div class="modal-container">
 				<div class="modal-head">
 					<div class="modal-title">
 						<slot name="header">{{title}}</slot>
 					</div>
-					<span class="modal-close" @click='storeShow()'></span>
+					<span class="modal-close" @click='show=""'></span>
 				</div>
 				<div class="modal-content">
 					<div class="store_tree">
                   <h3>所有门店</h3>
                   <p>
                      <input v-model='storeName' type="text" id="txtSearchStoreName" placeholder="输入门店名称" class="wd-273">
-                     <a href="javascript:;" class="search_box" id="btnSearchStore"></a>
+                     <a @click='searchStore' href="javascript:;" class="search_box" id="btnSearchStore"></a>
                   </p>
                   <ul id="treeDemo" class="ztree"></ul>
                   <div class="store_footer">
